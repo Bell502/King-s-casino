@@ -38,9 +38,68 @@ await ctx.send(embed=embed)
 else:
 await ctx.send("홀 또는 짝을 입력하세요")
 else:
-await ctx.send("돈이 부족합니다. 현재자산: " + str(cur_money))await ctx.send("돈이 부족합니다. 현재자산: " + str(cur_money))
+await ctx.send("돈이 부족합니다. 현재자산: " + str(cur_money))
 else:
-   await ctx.send("10원 이상만 배팅 가능합니다.")
-   else:
-   await ctx.send("홀짝게임은 회원가입 후 이용 가능합니다.")
-   
+await ctx.send("10원 이상만 배팅 가능합니다.")
+else:
+await ctx.send("홀짝게임은 회원가입 후 이용 가능합니다.")
+...
+#user.py
+...
+c_loss = 5
+...
+def addLoss(_target, _row, _amount):
+loadFile()
+ws.cell(_row, c_loss).value += _amount
+saveFile()
+...
+def Signup(_name, _id):
+loadFile()
+_row = checkFirstRow()
+ws.cell(row=_row, column=c_name, value=_name)
+ws.cell(row=_row, column=c_id, value =hex(_id))
+ws.cell(row=_row, column=c_money, value = default_money)
+ws.cell(row=_row, column=c_lvl, value = 1)
+ws.cell(row=_row, column=c_loss, value = 0)
+saveFile()
+...
+def userInfo(_row):
+loadFile()
+_lvl = ws.cell(_row,c_lvl).value
+_money = ws.cell(_row,c_money).value
+_loss = ws.cell(_row,c_loss).value
+saveFile()
+return _lvl, _money, _loss
+#main.py
+...
+@bot.command()
+async def 내정보(ctx):
+userExistance, userRow = checkUser(ctx.author.name, ctx.author.id)
+if not userExistance:
+await ctx.send("회원가입 후 자신의 정보를 확인할 수 있습니다.")
+else:
+level, money, loss = userInfo(userRow)
+embed = discord.Embed(title="유저 정보", description = ctx.author.name, color = 0x62D0F6)
+embed.add_field(name = "레벨", value = level)
+embed.add_field(name = "보유 자산", value = money)
+embed.add_field(name = "도박으로 날린 돈", value = loss, inline = False)
+await ctx.send(embed=embed)
+@bot.command()
+async def 정보(ctx, user: discord.User):
+userExistance, userRow = checkUser(user.name, user.id)
+if not userExistance:
+await ctx.send(user.name  + " 은(는) 등록되지 않은 사용자입니다.")
+else:
+level, money, loss = userInfo(userRow)
+
+embed = discord.Embed(title="유저 정보", description = user.name, color = 0x62D0F6)
+embed.add_field(name = "레벨", value = level)
+embed.add_field(name = "보유 자산", value = money)
+embed.add_field(name = "도박으로 날린 돈", value = loss, inline = False)
+await ctx.send(embed=embed)
+...
+
+
+
+
+
