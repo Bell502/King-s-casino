@@ -65,41 +65,7 @@ saveFile()
 ...
 def userInfo(_row):
 loadFile()
-_lvl = ws.cell(_row,c_lvl).value
-_money = ws.cell(_row,c_money).value
+_lvl = ws_money = ws.cell(_row,c_money).value.cell(_row,c_lvl).value
 _loss = ws.cell(_row,c_loss).value
 saveFile()
 return _lvl, _money, _loss
-#main.py
-...
-@bot.command()
-async def 내정보(ctx):
-userExistance, userRow = checkUser(ctx.author.name, ctx.author.id)
-if not userExistance:
-await ctx.send("회원가입 후 자신의 정보를 확인할 수 있습니다.")
-else:
-level, money, loss = userInfo(userRow)
-embed = discord.Embed(title="유저 정보", description = ctx.author.name, color = 0x62D0F6)
-embed.add_field(name = "레벨", value = level)
-embed.add_field(name = "보유 자산", value = money)
-embed.add_field(name = "도박으로 날린 돈", value = loss, inline = False)
-await ctx.send(embed=embed)
-@bot.command()
-async def 정보(ctx, user: discord.User):
-userExistance, userRow = checkUser(user.name, user.id)
-if not userExistance:
-await ctx.send(user.name  + " 은(는) 등록되지 않은 사용자입니다.")
-else:
-level, money, loss = userInfo(userRow)
-
-embed = discord.Embed(title="유저 정보", description = user.name, color = 0x62D0F6)
-embed.add_field(name = "레벨", value = level)
-embed.add_field(name = "보유 자산", value = money)
-embed.add_field(name = "도박으로 날린 돈", value = loss, inline = False)
-await ctx.send(embed=embed)
-...
-
-
-
-
-
