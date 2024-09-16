@@ -1,4 +1,143 @@
-#game.py
+@bot.command()
+async def 회원가입(ctx):
+    print(ctx.author.name)
+    print(ctx.author.id)
+    #user.py
+
+from openpyxl import load_workbook, Workbook
+
+c_name = 1
+c_id = 2
+c_money = 3
+c_lvl = 4
+
+default_money = 10000
+
+wb = load_workbook("userDB.xlsx")
+ws = wb.active
+
+def signup(_name, _id):
+    ws.cell(row=2, column=c_name, value=_name)
+    ws.cell(row=2, column=c_id, value =_id)
+    ws.cell(row=2, column=c_money, value = default_money)
+    ws.cell(row=2, column=c_lvl, value = 1)
+
+    wb.save("userDB.xlsx")
+    @bot.command()
+async def 회원가입(ctx):
+    signup(ctx.author.name, ctx.author.id)
+    ...
+
+def checkRow():
+    for row in range(2, ws.max_row + 1):
+        if ws.cell(row,1).value is None:
+            return row
+            break
+    #return ws.max_row 불안정하지만 훨씬 간단함
+
+def signup(_name, _id):
+    _row = checkRow()
+    
+    ws.cell(row=_row, column=c_name, value=_name)
+    ws.cell(row=_row, column=c_id, value =_id)
+    ws.cell(row=_row, column=c_money, value = default_money)
+    ws.cell(row=_row, column=c_lvl, value = 1)
+    
+...
+#user.py
+
+...
+def checkName(_name, _id):
+    for row in range(2, ws.max_row+1):
+        if ws.cell(row,1).value == _name and ws.cell(row,2).value == _id:
+            break
+            return False
+        else:
+            return True
+            break
+...
+#main.py
+
+...
+@bot.command()
+async def 회원가입(ctx):
+    #print(ctx.author.name)
+    #print(ctx.author.id)
+    if checkName(ctx.author.name, ctx.author.id):
+        signup(ctx.author.name, ctx.author.id)
+        await ctx.send("회원가입이 완료되었습니다.")
+    else:
+        await ctx.send("이미 가입하셨습니다.")
+...
+#user.py
+...
+def delete():
+ws.delete_rows(2,ws.max_row)
+wb.save("userDB.xlsx")
+#main.py
+...
+@bot.command()
+async def reset(ctx):
+delete()
+...
+#user.py
+...
+def getMoney(_name, _id):
+	loadFile()
+    
+    for row in range(2, ws.max_row+2):
+    	if ws.cell(row, c_name).value == _name and ws.cell(row,c_id).value == hex(_id):
+        	return ws.cell(row,c_money).value
+            break
+        else:
+        	return 0
+            break
+ ...
+ @bot.command()
+async def 송금(ctx, user: discord.User, money):
+    if checkName(user.name, user.id):
+        await ctx.send("등록되지 않는 사용자입니다.")
+    else:
+        if getMoney(ctx.author.name, ctx.author.id) >= int(money):
+            await ctx.send("송금")
+        else:
+            await ctx.send("돈이 충분하지 않습니다.")
+            #user.py
+...
+def remit(sender, s_id, receiver, r_id, _amount):
+    loadFile()
+    
+    receiver_row = findRow(receiver, r_id)
+    sender_row = findRow(sender, s_id)
+    
+    ws.cell(receiver_row, c_money).value += int(_amount)
+    ws.cell(sender_row, c_money).value -= int(_amount)
+
+    saveFile()
+...
+#main.py
+...
+@bot.command()
+async def 송금(ctx, user: discord.User, money):
+    if findRow(user.name, user.id) == None:
+        await ctx.send("등록되지 않는 사용자입니다.")
+    else:
+        s_money = getMoney(ctx.author.name, ctx.author.id)
+        r_money = getMoney(user.name, user.id)
+
+        if s_money >= int(money):
+            remit(ctx.author.name, ctx.author.id, user.name, user.id, money)
+
+            embed = discord.Embed(title="송금 완료", description = "송금된 돈: " + money, color = 0x77ff00)
+            embed.add_field(name = "보낸 사람: " + ctx.author.name, value = "현재 자산: " + str(getMoney(ctx.author.name, ctx.author.id)))
+            embed.add_field(name = ":arrow_forward:", value = "")
+            embed.add_field(name="받은 사람: " + user.name, value="현재 자산: " + str(getMoney(user.name, user.id)))
+                    
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("돈이 충분하지 않습니다.")
+ ...
+ #game.py
 ...
 def coin():
     coin_face = random.randrange(0,2)
@@ -6,7 +145,7 @@ def coin():
         return "홀"
     elif coin_face == 1:
         return "짝"
-#main.py
+        #main.py
 ...
 @bot.command()
 async def 홀짝(ctx, face, money):
@@ -119,3 +258,5 @@ async def 정보(ctx, user: discord.User):
         await ctx.send(embed=embed)
 
 ...
+
+ 
