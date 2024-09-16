@@ -1,3 +1,17 @@
+import discord
+from discord.ext import commands
+ 
+bot = commands.Bot(command_prefix='#')
+ 
+@bot.event
+async def on_ready():
+    print(f'Login bot: {bot.user}')
+ 
+@bot.command()
+async def hello(message):
+    await message.channel.send('Hi!')
+ 
+bot.run('#OTY5MTUyNz')
 @bot.command()
 async def 회원가입(ctx):
     print(ctx.author.name)
@@ -42,7 +56,7 @@ def signup(_name, _id):
     ws.cell(row=_row, column=c_id, value =_id)
     ws.cell(row=_row, column=c_money, value = default_money)
     ws.cell(row=_row, column=c_lvl, value = 1)
-    
+   
 ...
 #user.py
 
@@ -102,7 +116,7 @@ async def 송금(ctx, user: discord.User, money):
             await ctx.send("송금")
         else:
             await ctx.send("돈이 충분하지 않습니다.")
-            #user.py
+	    #user.py
 ...
 def remit(sender, s_id, receiver, r_id, _amount):
     loadFile()
@@ -138,14 +152,14 @@ async def 송금(ctx, user: discord.User, money):
             await ctx.send("돈이 충분하지 않습니다.")
  ...
  #game.py
-...
+ ...
 def coin():
     coin_face = random.randrange(0,2)
     if coin_face == 0:
         return "홀"
     elif coin_face == 1:
         return "짝"
-        #main.py
+#main.py
 ...
 @bot.command()
 async def 홀짝(ctx, face, money):
@@ -241,22 +255,3 @@ async def 내정보(ctx):
         embed.add_field(name = "도박으로 날린 돈", value = loss, inline = False)
 
         await ctx.send(embed=embed)
-
-@bot.command()
-async def 정보(ctx, user: discord.User):
-    userExistance, userRow = checkUser(user.name, user.id)
-
-    if not userExistance:
-        await ctx.send(user.name  + " 은(는) 등록되지 않은 사용자입니다.")
-    else:
-        level, money, loss = userInfo(userRow)
-        embed = discord.Embed(title="유저 정보", description = user.name, color = 0x62D0F6)
-        embed.add_field(name = "레벨", value = level)
-        embed.add_field(name = "보유 자산", value = money)
-        embed.add_field(name = "도박으로 날린 돈", value = loss, inline = False)
-
-        await ctx.send(embed=embed)
-
-...
-
- 
