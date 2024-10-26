@@ -1,276 +1,125 @@
-pip install discord.py
 import discord
+import random
 from discord.ext import commands
- 
-bot = commands.Bot(command_prefix='#')
- 
-@bot.event
-async def on_ready():
-    print(f'Login bot: {bot.user}')
- 
-@bot.command()
-async def hello(message):
-    await message.channel.send('Hi!')
- 
-bot.run('#OTY5MTUyNz')
-@bot.command()
-async def 회원가입(ctx):
-    print(ctx.author.name)
-    print(ctx.author.id)
-    #user.py
 
-from openpyxl import load_workbook, Workbook
+# 디스코드 봇 생성
+bot = commands.Bot(command_prefix='!')
 
-c_name = 1
-c_id = 2
-c_money = 3
-c_lvl = 4
+# 사용자 점수 저장
+user_scores = {}
 
-default_money = 10000
+# 게임 목록
+games = {
+    "블랙잭": "blackjack",
+    "바카라": "baccarat",
+    "토토": "toto",
+    "슬롯": "slot_machine",
+    "파워볼": "powerball",
+}
 
-wb = load_workbook("userDB.xlsx")
-ws = wb.active
+def get_user_score(user):
+    return user_scores.get(user.id, 100)  # 기본 점수 100으로 설정
 
-def signup(_name, _id):
-    ws.cell(row=2, column=c_name, value=_name)
-    ws.cell(row=2, column=c_id, value =_id)
-    ws.cell(row=2, column=c_money, value = default_money)
-    ws.cell(row=2, column=c_lvl, value = 1)
+def update_user_score(user, amount):
+    user_scores[user.id] = get_user_score(user) + amount
 
-    wb.save("userDB.xlsx")
-@bot.command()
-async def 회원가입(ctx):
-    signup(ctx.author.name, ctx.author.id)
-    ...
+# 1. 블랙잭 (Blackjack)
+async def blackjack(ctx):
+    # 블랙잭 로직
+    user_score = get_user_score(ctx.author)
+    bet_amount = await get_bet(ctx, user_score)
 
-def checkRow():
-    for row in range(2, ws.max_row + 1):
-        if ws.cell(row,1).value is None:
-            return row
-            break
-    #return ws.max_row 불안정하지만 훨씬 간단함
+    if bet_amount is None:
+        return  # 유효하지 않은 베팅인 경우
 
-def signup(_name, _id):
-    _row = checkRow()
-    
-    ws.cell(row=_row, column=c_name, value=_name)
-    ws.cell(row=_row, column=c_id, value =_id)
-    ws.cell(row=_row, column=c_money, value = default_money)
-    ws.cell(row=_row, column=c_lvl, value = 1)
-    
-...
-#user.py
+    user_cards = [random.choice([2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]) for _ in range(2)]
+    dealer_cards = [random.choice([2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]) for _ in range(2)]
+    game_over = False
 
-...
-def checkName(_name, _id):
-    for row in range(2, ws.max_row+1):
-        if ws.cell(row,1).value == _name and ws.cell(row,2).value == _id:
-            break
-            return False
+    while not game_over:
+        user_score = sum(user_cards)
+        dealer_score = sum(dealer_cards)
+        await ctx.send(f"당신의 카드: {user_cards}, 점수: {user_score}")
+        await ctx.send(f"딜러의 첫 번째 카드: {dealer_cards[0]}")
+
+        if user_score == 21 or dealer_score == 21 or user_score > 21:
+            game_over = True
         else:
-            return True
-            break
-...
-#main.py
-
-...
-@bot.command()
-async def 회원가입(ctx):
-    #print(ctx.author.name)
-    #print(ctx.author.id)
-    if checkName(ctx.author.name, ctx.author.id):
-        signup(ctx.author.name, ctx.author.id)
-        await ctx.send("회원가입이 완료되었습니다.")
-    else:
-        await ctx.send("이미 가입하셨습니다.")
-...
-#user.py
-...
-def delete():
-ws.delete_rows(2,ws.max_row)
-wb.save("userDB.xlsx")
-#main.py
-...
-@bot.command()
-async def reset(ctx):
-delete()
-...
-#user.py
-...
-def getMoney(_name, _id):
-	loadFile()
-    
-    for row in range(2, ws.max_row+2):
-    	if ws.cell(row, c_name).value == _name and ws.cell(row,c_id).value == hex(_id):
-        	return ws.cell(row,c_money).value
-            break
-        else:
-        	return 0
-            break
- ...
- @bot.command()
-async def 송금(ctx, user: discord.User, money):
-    if checkName(user.name, user.id):
-        await ctx.send("등록되지 않는 사용자입니다.")
-    else:
-        if getMoney(ctx.author.name, ctx.author.id) >= int(money):
-            await ctx.send("송금")
-        else:
-            await ctx.send("돈이 충분하지 않습니다.")
-#user.py
-...
-def remit(sender, s_id, receiver, r_id, _amount):
-    loadFile()
-    
-    receiver_row = findRow(receiver, r_id)
-    sender_row = findRow(sender, s_id)
-    
-    ws.cell(receiver_row, c_money).value += int(_amount)
-    ws.cell(sender_row, c_money).value -= int(_amount)
-
-    saveFile()
-...
-#main.py
-...
-@bot.command()
-async def 송금(ctx, user: discord.User, money):
-    if findRow(user.name, user.id) == None:
-        await ctx.send("등록되지 않는 사용자입니다.")
-    else:
-        s_money = getMoney(ctx.author.name, ctx.author.id)
-        r_money = getMoney(user.name, user.id)
-
-        if s_money >= int(money):
-            remit(ctx.author.name, ctx.author.id, user.name, user.id, money)
-
-            embed = discord.Embed(title="송금 완료", description = "송금된 돈: " + money, color = 0x77ff00)
-            embed.add_field(name = "보낸 사람: " + ctx.author.name, value = "현재 자산: " + str(getMoney(ctx.author.name, ctx.author.id)))
-            embed.add_field(name = ":arrow_forward:", value = "")
-            embed.add_field(name="받은 사람: " + user.name, value="현재 자산: " + str(getMoney(user.name, user.id)))
-                    
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send("돈이 충분하지 않습니다.")
- ...
- #game.py
-...
-def coin():
-    coin_face = random.randrange(0,2)
-    if coin_face == 0:
-        return "홀"
-    elif coin_face == 1:
-        return "짝"
-	#main.py
-...
-@bot.command()
-async def 홀짝(ctx, face, money):
-    userExistance, userRow = checkUser(ctx.author.name, ctx.author.id)
-    forecast = coin()
-    result = ""
-    betting = 0
-    _color = 0x000000
-    if userExistance:
-        cur_money = getMoney(ctx.author.name, userRow)
-        if int(money) >= 10:
-            if cur_money >= int(money):
-                if face == "홀" or face == "짝":
-                    if forecast == face:
-                        result = "성공"
-                        _color = 0x00ff56
-
-                        betting = int(money)
-
-                        modifyMoney(ctx.author.name, userRow, 0.5*betting)
-                    else:
-                        result = "실패"
-                        _color = 0xFF0000
-
-                        betting = int(money)
-                        
-                        modifyMoney(ctx.author.name, userRow, -int(betting))
-                        addLoss(ctx.author.name, userRow, int(betting))
-
-                    embed = discord.Embed(title = "홀짝게임 결과", description = result, color = _color)
-                    embed.add_field(name = "배팅금액", value = betting, inline = False)
-                    embed.add_field(name = "현재 자산", value = getMoney(ctx.author.name, userRow), inline = False)
-
-                    await ctx.send(embed=embed)
-
-                else:
-                    await ctx.send("홀 또는 짝을 입력하세요")
+            await ctx.send("카드를 더 받으시겠습니까? (y/n)")
+            response = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
+            if response.content.lower() == 'y':
+                user_cards.append(random.choice([2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]))
             else:
-                await ctx.send("돈이 부족합니다. 현재자산: " + str(cur_money))
+                game_over = True
+
+    while dealer_score < 17:
+        dealer_cards.append(random.choice([2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]))
+        dealer_score = sum(dealer_cards)
+
+    await ctx.send(f"당신의 최종 손: {user_cards}, 점수: {user_score}")
+    await ctx.send(f"딜러의 최종 손: {dealer_cards}, 점수: {dealer_score}")
+
+    # 게임 결과 처리
+    if user_score > 21:
+        await ctx.send("당신이 졌습니다")
+        update_user_score(ctx.author, -bet_amount)
+    elif dealer_score > 21 or user_score > dealer_score:
+        await ctx.send("당신이 이겼습니다")
+        update_user_score(ctx.author, bet_amount)
+    elif user_score < dealer_score:
+        await ctx.send("당신이 졌습니다")
+        update_user_score(ctx.author, -bet_amount)
+    else:
+        await ctx.send("무승부입니다")
+
+
+# 베팅 함수
+async def get_bet(ctx, user_score):
+    await ctx.send(f"현재 점수: {user_score}. 베팅할 금액을 입력하세요:")
+    response = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
+
+    try:
+        bet_amount = int(response.content)
+        if 0 < bet_amount <= user_score:
+            return bet_amount
         else:
-            await ctx.send("10원 이상만 배팅 가능합니다.")
+            await ctx.send("유효하지 않은 베팅입니다.")
+            return None
+    except ValueError:
+        await ctx.send("숫자를 입력해주세요.")
+        return None
+
+# 2. 바카라, 3. 토토, 4. 슬롯 머신, 5. 파워볼 같은 방식으로 구현
+# 해당 함수들도 유사한 방식으로 점수와 베팅 시스템을 적용해야 합니다.
+# 이 부분은 생략하고, 블랙잭 로직을 각 게임에 맞게 변형할 수 있습니다.
+
+# 메인 메뉴 명령어
+@bot.command(name='게임')
+async def game_menu(ctx):
+    await ctx.send("=== 게임 메뉴 ===")
+    menu_message = "\n".join([f"{i + 1}: {game}" for i, game in enumerate(games.keys())])
+    await ctx.send(menu_message)
+    await ctx.send("원하는 게임의 번호를 입력하세요:")
+
+    response = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
+    game_choice = response.content
+
+    if game_choice.isdigit() and 1 <= int(game_choice) <= len(games):
+        selected_game = list(games.values())[int(game_choice) - 1]
+        if selected_game == "blackjack":
+            await blackjack(ctx)
+        elif selected_game == "baccarat":
+            await baccarat(ctx)
+        elif selected_game == "toto":
+            await toto(ctx)
+        elif selected_game == "slot_machine":
+            await slot_machine(ctx)
+        elif selected_game == "powerball":
+            await powerball(ctx)
     else:
-        await ctx.send("홀짝게임은 회원가입 후 이용 가능합니다.")
-...
-#user.py
-...
-c_loss = 5
-...
-def addLoss(_target, _row, _amount):
-    loadFile()
-    
-    ws.cell(_row, c_loss).value += _amount
+        await ctx.send("잘못된 입력입니다. 다시 시도해주세요.")
 
-    saveFile()
-...
-def Signup(_name, _id):
-    loadFile()
 
-    _row = checkFirstRow()
-
-    ws.cell(row=_row, column=c_name, value=_name)
-    ws.cell(row=_row, column=c_id, value =hex(_id))
-    ws.cell(row=_row, column=c_money, value = default_money)
-    ws.cell(row=_row, column=c_lvl, value = 1)
-    ws.cell(row=_row, column=c_loss, value = 0)
-
-    saveFile()
-...
-
-def userInfo(_row):
-    loadFile()
-
-    _lvl = ws.cell(_row,c_lvl).value
-    _money = ws.cell(_row,c_money).value
-    _loss = ws.cell(_row,c_loss).value
-
-    saveFile()
-
-    return _lvl, _money, _loss
-    #main.py
-...
-@bot.command()
-async def 내정보(ctx):
-    userExistance, userRow = checkUser(ctx.author.name, ctx.author.id)
-
-    if not userExistance:
-        await ctx.send("회원가입 후 자신의 정보를 확인할 수 있습니다.")
-    else:
-        level, money, loss = userInfo(userRow)
-        embed = discord.Embed(title="유저 정보", description = ctx.author.name, color = 0x62D0F6)
-        embed.add_field(name = "레벨", value = level)
-        embed.add_field(name = "보유 자산", value = money)
-        embed.add_field(name = "도박으로 날린 돈", value = loss, inline = False)
-
-        await ctx.send(embed=embed)
-
-@bot.command()
-async def 정보(ctx, user: discord.User):
-    userExistance, userRow = checkUser(user.name, user.id)
-
-    if not userExistance:
-        await ctx.send(user.name  + " 은(는) 등록되지 않은 사용자입니다.")
-    else:
-        level, money, loss = userInfo(userRow)
-        embed = discord.Embed(title="유저 정보", description = user.name, color = 0x62D0F6)
-        embed.add_field(name = "레벨", value = level)
-        embed.add_field(name = "보유 자산", value = money)
-        embed.add_field(name = "도박으로 날린 돈", value = loss, inline = False)
-
-        await ctx.send(embed=embed)
-
-...
-
+# 봇 실행
+TOKEN = MTI5OTg3MDIyMTQzNTE0MjIwNA.Gwyy59.k-AFps8q8d0vNVmtTfJ7fuMhfFzWKmNG2CbYMg  # 여기에 자신의 Discord 봇 토큰을 입력하세요.
+bot.run(TOKEN)
